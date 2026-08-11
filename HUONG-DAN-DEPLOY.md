@@ -1,3 +1,4 @@
+[HUONG-DAN-DEPLOY.md](https://github.com/user-attachments/files/30925466/HUONG-DAN-DEPLOY.md)
 # 🌸 Hướng dẫn cài đặt & Deploy "Vườn Hoa Của Tôi"
 
 Hướng dẫn này dành cho người **chưa từng dùng Firebase hay GitHub**. Cứ làm theo từng bước, đừng bỏ bước nào.
@@ -21,7 +22,7 @@ Có 3 phần lớn:
 ### Bước 1.2 — Tạo ứng dụng Web (Web App)
 1. Ở trang tổng quan dự án, bấm biểu tượng **`</>`** (Web).
 2. Đặt tên app, ví dụ `vuon-hoa-web` → bấm **Register app**.
-3. Firebase sẽ hiện ra một đoạn code `firebaseConfig = {...}`. **Copy toàn bộ đoạn này lại** — bạn sẽ dùng ở Bước 1.6.
+3. Firebase sẽ hiện ra một đoạn code `firebaseConfig = {...}`. **Copy toàn bộ đoạn này lại** — bạn sẽ dùng ở Bước 1.5.
 4. Bấm **Continue to console**.
 
 ### Bước 1.3 — Bật Authentication (đăng nhập Admin)
@@ -61,26 +62,9 @@ service cloud.firestore {
 }
 ```
 
-### Bước 1.5 — Bật Storage (nơi lưu ảnh hoa)
-1. Menu bên trái → **Build → Storage** → **Get started** → chọn chế độ mặc định → **Done** (chọn cùng vị trí máy chủ như Bước 1.4).
-2. Vào tab **Rules**, dán đoạn sau và **Publish**:
+> **Về ảnh hoa:** App này **không dùng Firebase Storage** (Storage hiện bắt buộc gói Blaze/trả phí, phải nhập thẻ). Thay vào đó, ảnh được **nén nhỏ ngay trên trình duyệt** rồi lưu trực tiếp trong Firestore — hoàn toàn nằm trong gói **Spark miễn phí**, không cần thẻ, không cần bật thêm dịch vụ nào. Vì vậy bạn **bỏ qua**, không cần bật Storage.
 
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /flowers/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-  }
-}
-```
-
-> Lưu ý: nếu Firebase yêu cầu nâng cấp gói **Blaze** để dùng Storage, đây vẫn là gói **trả theo dùng** có mức miễn phí hàng ngày rất rộng (bạn cần nhập thẻ nhưng gần như không mất phí với app dùng cá nhân/nhóm nhỏ).
-
-### Bước 1.6 — Dán cấu hình vào code
+### Bước 1.5 — Dán cấu hình vào code
 1. Mở file **`firebase-config.js`** trong bộ code đã tải về.
 2. Thay toàn bộ nội dung bên trong `firebaseConfig = {...}` bằng đoạn bạn đã copy ở **Bước 1.2**. Ví dụ:
 
@@ -107,7 +91,7 @@ export const firebaseConfig = {
 
 ### Bước 2.2 — Tải file lên (không cần dùng dòng lệnh)
 1. Trong trang repository vừa tạo, bấm **"uploading an existing file"** (hoặc **Add file → Upload files**).
-2. Kéo thả **toàn bộ** các file: `index.html`, `style.css`, `app.js`, `firebase-config.js` (đã sửa ở Bước 1.6) vào khung tải lên.
+2. Kéo thả **toàn bộ** các file: `index.html`, `style.css`, `app.js`, `firebase-config.js` (đã sửa ở Bước 1.5) vào khung tải lên.
 3. Cuộn xuống, bấm **Commit changes**.
 
 ### Bước 2.3 — Bật GitHub Pages
@@ -160,5 +144,5 @@ Mỗi khi sửa code, vào repository trên GitHub → mở file cần sửa →
 |---|---|
 | Web mở lên trắng trơn / không hiện hoa | Mở Console trình duyệt (F12) xem lỗi; kiểm tra lại `firebase-config.js` đã đúng chưa |
 | Đăng nhập Admin báo lỗi domain | Làm lại Bước 2.4 |
-| Gửi hoa báo lỗi tải ảnh | Kiểm tra Storage đã bật & rules đã Publish (Bước 1.5) |
+| Gửi hoa báo "ảnh quá lớn" | Chọn ảnh chụp thường (không phải ảnh gốc quá to/nặng), hoặc chụp lại ở độ phân giải thấp hơn |
 | Hoa đã duyệt mà không hiện | Firestore cần một chỉ mục (index) cho truy vấn — mở Console (F12), nếu thấy link "Create index", bấm vào và đợi ~1 phút |
