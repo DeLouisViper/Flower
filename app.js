@@ -7,15 +7,13 @@ import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc,
   query, where, orderBy, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // ---------- KHỞI TẠO FIREBASE ----------
+// Lưu ý: App này KHÔNG dùng Firebase Storage (gói miễn phí Spark không hỗ trợ Storage).
+// Ảnh được nén nhỏ lại ở trình duyệt rồi lưu trực tiếp trong Firestore (dạng base64).
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 // ---------- STATE ----------
 let approvedFlowers = [];   // toàn bộ hoa đã duyệt (để tìm kiếm client-side)
@@ -73,6 +71,49 @@ document.querySelectorAll(".modal-overlay").forEach((overlay) => {
 $("addFlowerBtn").addEventListener("click", () => openModal("addModal"));
 $("emptyAddBtn").addEventListener("click", () => openModal("addModal"));
 $("loginBtn").addEventListener("click", () => openModal("loginModal"));
+
+// ---------- NÉN ẢNH (lưu trực tiếp vào Firestore, không cần Storage) ----------
+// Firestore giới hạn mỗi document tối đa ~1MB, nên ảnh được resize + nén JPEG
+// càng nhỏ càng an toàn. Hàm này thử giảm dần chất lượng/kích thước cho tới khi vừa.
+function compressImage(file, { maxWidth = 800, quality = 0.72 } = {}) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => (img.src = e.target.result);
+    reader.onerror = reject;
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Thử nén với độ nét giảm dần cho tới khi dữ liệu đủ nhỏ để lưu vào Firestore.
+async function compressUntilSmallEnough(file) {
+  const attempts = [
+    { maxWidth: 900, quality: 0.75 },
+    { maxWidth: 700, quality: 0.65 },
+    { maxWidth: 500, quality: 0.55 },
+    { maxWidth: 360, quality: 0.5 }
+  ];
+  const MAX_CHARS = 700000; // ~700KB base64, an toàn dưới giới hạn 1MB/document
+  let last = null;
+  for (const opt of attempts) {
+    last = await compressImage(file, opt);
+    if (last.length <= MAX_CHARS) return last;
+  }
+  if (last.length > MAX_CHARS) {
+    throw new Error("Ảnh vẫn quá lớn sau khi nén. Vui lòng chọn ảnh khác nhỏ hơn.");
+  }
+  return last;
+}
 
 // ---------- IMAGE PREVIEW ----------
 $("flowerImage").addEventListener("change", (e) => {
@@ -237,14 +278,11 @@ $("addFlowerForm").addEventListener("submit", async (e) => {
   const owners = ownersRaw.split(",").map((o) => o.trim()).filter(Boolean);
 
   submitBtn.disabled = true;
-  msg.textContent = "Đang tải ảnh lên...";
+  msg.textContent = "Đang xử lý ảnh...";
   msg.className = "form-msg";
 
   try {
-    const path = `flowers/${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
-    const imageUrl = await getDownloadURL(storageRef);
+    const imageUrl = await compressUntilSmallEnough(file);
 
     await addDoc(collection(db, "flowers"), {
       name,
