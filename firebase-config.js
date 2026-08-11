@@ -5,10 +5,11 @@
 // =========================================================
 
 export const firebaseConfig = {
-  apiKey: "DÁN_API_KEY_CỦA_BẠN_VÀO_ĐÂY",
-  authDomain: "ten-du-an.firebaseapp.com",
-  projectId: "ten-du-an",
-  storageBucket: "ten-du-an.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxx"
+  apiKey: "AIzaSyBQYDEwMGqvHW_ZRy87YbZvVYbPVJWpSpU",
+  authDomain: "flower-f6bd0.firebaseapp.com",
+  projectId: "flower-f6bd0",
+  storageBucket: "flower-f6bd0.firebasestorage.app",
+  messagingSenderId: "684753469193",
+  appId: "1:684753469193:web:10b0fdeadce1f759a65dd8",
+  measurementId: "G-ME2S8GBEZT"
 };
