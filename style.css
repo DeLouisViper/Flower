@@ -214,6 +214,11 @@ body{
   backdrop-filter: blur(4px);
   display:flex; align-items:center; justify-content:center; z-index:100; padding: 20px;
 }
+/* Quan trọng: thuộc tính "hidden" của HTML phải luôn thắng display:flex ở trên,
+   nếu không tất cả các popup sẽ hiển thị chồng lên nhau ngay khi tải trang. */
+.modal-overlay[hidden]{
+  display: none;
+}
 .modal{
   background: var(--surface); border-radius: 24px; padding: 30px;
   width: 100%; max-width: 480px; max-height: 88vh; overflow-y:auto;
