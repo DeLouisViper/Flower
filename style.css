@@ -115,6 +115,9 @@ body{
   display:flex; align-items:center; gap:10px; background: var(--gradient-soft);
   border:1px solid var(--border); padding: 7px 14px; border-radius:999px; font-weight:600; font-size:.85rem;
 }
+.admin-badge[hidden]{
+  display: none;
+}
 
 /* =========================================================
    GALLERY
